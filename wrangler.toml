@@ -1,0 +1,15 @@
+name = "gaztestworker"
+main = "src/index.ts"
+compatibility_date = "2022-06-29"
+
+account_id = "70307c193122a50d5b62eed4a0b7cb84"
+
+tsconfig = "./tsconfig.json"
+
+
+workers_dev = false
+route = "https://r2.weirdgloop.org/*"
+
+r2_buckets  = [
+  { binding = "TEST_BUCKET", bucket_name = "test-bucket", preview_bucket_name =  "" }
+]
