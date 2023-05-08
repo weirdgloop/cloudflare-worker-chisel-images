@@ -33,10 +33,48 @@ export default {
         pathname is '/imgs/wowee.png'
         .slice(1) is 'imgs/wowee.png'
         */
+       function fbytes(bytes:number):string {
+            let suf = 'B', b = bytes;
+            if (b >= 1024) {
+                b /= 1024;
+                suf = 'KiB';
+            }
+            if (b >= 1024) {
+                b /= 1024;
+                suf = 'MiB';
+            }
+            return `${b.toPrecision(4)}${suf}`;
+       }
        let obj;
         if (url.pathname.slice(1,6) === 'imgur') {
             let object_key = 'images/'+url.pathname.slice(7);
-
+            if (/^images\/[a-z0-9]+\/$/i.test(object_key)) {
+                let entries = [];
+                let album, cursor=undefined;
+                while (true) {
+                    album = await env.IMGUR_BACKUP.list({prefix:object_key, cursor:cursor});
+                    if (album === null || album === undefined || album.objects.length === 0) {
+                        break;
+                    }
+                    for (let obj_info of album.objects) {
+                        let k = '/imgur/'+obj_info.key.slice(7);
+                        entries.push(`<li><a class="img-link" href="${k}">${k}</a> - <span class="img-size">${fbytes(obj_info.size)}</span></li>`);
+                    }
+                    if (!album.truncated) break;
+                    cursor = album.cursor;
+                }
+                if (entries.length === 0)
+                    return new Response('Album Not Found', {status:404});
+                let html = `<!DOCTYPE html>
+                <body>
+                    <ul>${entries.join('\n')}</ul>
+                </body>`;
+                return new Response(html, {
+                    headers: {
+                        'content-type': 'text/html;charset=UTF-8'
+                    }
+                });
+            }
             if (env.IMGUR_BACKUP === null) {
                 return new Response('Bucket/Object Not Found', {status:404});
             }
